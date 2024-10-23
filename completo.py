@@ -11,8 +11,15 @@ import time
 import pyperclip
 
 
+
 options = uc.ChromeOptions()
 options.binary_location = "/usr/bin/google-chrome"
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+#options.add_argument("--headless")  # Remova essa linha se você não quiser rodar no modo headless
+options.add_argument("--disable-gpu")
+options.add_argument("--remote-debugging-port=9222")  # Porta para depuração
+
 driver = uc.Chrome(options=options)
 
 
