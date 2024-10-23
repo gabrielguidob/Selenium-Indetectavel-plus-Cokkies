@@ -21,7 +21,7 @@ options.add_argument("--disable-gpu")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 driver.get('https://tjrj.pje.jus.br/1g/Painel/painel_usuario/advogado.seam')
-time.sleep(2)
+time.sleep(10)
 
 # Cria a instância do ActionChains
 actions = ActionChains(driver)
@@ -35,11 +35,11 @@ actions.send_keys('m@cedo8163')
 actions.send_keys(Keys.ENTER)
 # Executar todas as ações de uma vez
 actions.perform()
-time.sleep(5)
+time.sleep(10)
 
 # Após adicionar os cookies, recarrega a página
 driver.get('https://tjrj.pje.jus.br/1g/Painel/painel_usuario/advogado.seam')
-time.sleep(5)  # Aguarda o carregamento da página com os cookies aplicados
+time.sleep(10)  # Aguarda o carregamento da página com os cookies aplicados
 driver.get('https://tjrj.pje.jus.br/1g/Processo/ConsultaProcesso/listView.seam')
 
 
@@ -55,8 +55,7 @@ def search_process(url, process_number, search_box_id, search_result_id):
 
     # Envia a tecla ENTER para submeter o formulário
     search_box.send_keys(Keys.RETURN)
-    input('asdaw')  # Isso irá pausar o código até que você pressione Enter
-    time.sleep(1)
+    time.sleep(10)
     search_result = driver.find_element(By.ID, search_result_id).text
     print(search_result)
 
