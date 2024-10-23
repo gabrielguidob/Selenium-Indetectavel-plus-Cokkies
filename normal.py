@@ -82,7 +82,7 @@ def search_process(url, process_number, search_box_id, search_result_id, max_ret
                 search_box = wait_for_element(driver, By.ID, search_box_id)
                 if search_box:
                     search_box.click()
-                    
+                    time.sleep(0.3)
                     # Simula o comando "CTRL + V" para colar o conteúdo
                     actions = ActionChains(driver)
                     actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
