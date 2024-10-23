@@ -69,7 +69,7 @@ wait_for_page_load(driver)
 driver.get('https://tjrj.pje.jus.br/1g/Processo/ConsultaProcesso/listView.seam')
 wait_for_page_load(driver)
 
-# Função para buscar processo, com tentativa de recarregar a página se não carregar corretamente
+# Função para buscar processo, com tentativa de reabrir a URL se um elemento não for encontrado
 def search_process(url, process_number, search_box_id, search_result_id, max_retries=3):
     retries = 0
     while retries < max_retries:
@@ -97,15 +97,19 @@ def search_process(url, process_number, search_box_id, search_result_id, max_ret
                         search_result = result_element.text
                         print(search_result)
                         break
+                    else:
+                        # Reabre a URL caso o resultado não apareça
+                        print("Resultado não encontrado, reabrindo a URL.")
+                        driver.get(url)
                 else:
-                    print("Campo de busca não encontrado, recarregando a página.")
-                    driver.refresh()
+                    print("Campo de busca não encontrado, reabrindo a URL.")
+                    driver.get(url)
             except Exception as e:
                 print(f"Ocorreu um erro: {e}. Tentando novamente...")
-                driver.refresh()
+                driver.get(url)
         else:
-            print("Página não carregou corretamente, tentando novamente...")
-            driver.refresh()
+            print("Página não carregou corretamente, reabrindo a URL.")
+            driver.get(url)
         retries += 1
     if retries == max_retries:
         print(f"Não foi possível realizar a busca após {max_retries} tentativas.")
