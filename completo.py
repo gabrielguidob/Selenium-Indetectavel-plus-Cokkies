@@ -11,10 +11,10 @@ import time
 import pyperclip
 
 
-email = 'bielcomecuzin@gmail.com'
-password = 'bebezinho1337'
+options = uc.ChromeOptions()
+options.binary_location = "/usr/bin/google-chrome"
+driver = uc.Chrome(options=options)
 
-driver = uc.Chrome()
 
 driver.get('https://tjrj.pje.jus.br/1g/Painel/painel_usuario/advogado.seam')
 time.sleep(2)
