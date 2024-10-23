@@ -5,14 +5,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 import pyperclip
 
 # Configurações para o Chrome com webdriver normal
 options = webdriver.ChromeOptions()
-#options.binary_location = "/usr/bin/google-chrome"
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-gpu")
@@ -20,11 +19,34 @@ options.add_argument("--disable-gpu")
 # Iniciando o WebDriver com o Chrome
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
+# Função para aguardar o carregamento completo da página
+def wait_for_page_load(driver, timeout=30):
+    try:
+        WebDriverWait(driver, timeout).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+        return True
+    except TimeoutException:
+        print("A página demorou muito para carregar.")
+        return False
+
+# Função para aguardar o elemento ficar presente
+def wait_for_element(driver, by, value, timeout=30):
+    try:
+        return WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((by, value))
+        )
+    except TimeoutException:
+        print(f"Elemento com {by} = '{value}' demorou muito para aparecer.")
+        return None
+
+# Parte de login
 driver.get('https://tjrj.pje.jus.br/1g/Painel/painel_usuario/advogado.seam')
-time.sleep(10)
+wait_for_page_load(driver)
 
 # Cria a instância do ActionChains
 actions = ActionChains(driver)
+
 # Enviar 8 vezes a tecla Tab
 for _ in range(8):
     actions.send_keys(Keys.TAB)
@@ -35,30 +57,58 @@ actions.send_keys('m@cedo8163')
 actions.send_keys(Keys.ENTER)
 # Executar todas as ações de uma vez
 actions.perform()
-time.sleep(10)
 
-# Após adicionar os cookies, recarrega a página
+# Aguardar recarregamento e login
+time.sleep(5)
+
+# Recarrega a página
 driver.get('https://tjrj.pje.jus.br/1g/Painel/painel_usuario/advogado.seam')
-time.sleep(10)  # Aguarda o carregamento da página com os cookies aplicados
+wait_for_page_load(driver)
+
+# Acessa a página de consulta de processos
 driver.get('https://tjrj.pje.jus.br/1g/Processo/ConsultaProcesso/listView.seam')
+wait_for_page_load(driver)
 
-
-def search_process(url, process_number, search_box_id, search_result_id):
-    driver.get(url)
-    pyperclip.copy(process_number)
-    search_box = driver.find_element(By.ID, search_box_id)
-    search_box.click()
-    
-    # Simula o comando "CTRL + V" para colar o conteúdo
-    actions = ActionChains(driver)
-    actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
-
-    # Envia a tecla ENTER para submeter o formulário
-    search_box.send_keys(Keys.RETURN)
-    time.sleep(10)
-    search_result = driver.find_element(By.ID, search_result_id).text
-    print(search_result)
-
+# Função para buscar processo, com tentativa de recarregar a página se não carregar corretamente
+def search_process(url, process_number, search_box_id, search_result_id, max_retries=3):
+    retries = 0
+    while retries < max_retries:
+        driver.get(url)
+        if wait_for_page_load(driver):
+            try:
+                pyperclip.copy(process_number)
+                
+                # Aguardar a presença do campo de busca
+                search_box = wait_for_element(driver, By.ID, search_box_id)
+                if search_box:
+                    search_box.click()
+                    
+                    # Simula o comando "CTRL + V" para colar o conteúdo
+                    actions = ActionChains(driver)
+                    actions.key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
+                    
+                    # Envia a tecla ENTER para submeter o formulário
+                    search_box.send_keys(Keys.RETURN)
+                    
+                    # Aguardar o carregamento dos resultados
+                    result_element = wait_for_element(driver, By.ID, search_result_id)
+                    if result_element:
+                        # Extrai o resultado
+                        search_result = result_element.text
+                        print(search_result)
+                        break
+                else:
+                    print("Campo de busca não encontrado, recarregando a página.")
+                    driver.refresh()
+            except Exception as e:
+                print(f"Ocorreu um erro: {e}. Tentando novamente...")
+                driver.refresh()
+        else:
+            print("Página não carregou corretamente, tentando novamente...")
+            driver.refresh()
+        retries += 1
+    if retries == max_retries:
+        print(f"Não foi possível realizar a busca após {max_retries} tentativas.")
 
 # Testando com os sites e números de processos
 url = 'https://tjrj.pje.jus.br/1g/Processo/ConsultaProcesso/listView.seam'
