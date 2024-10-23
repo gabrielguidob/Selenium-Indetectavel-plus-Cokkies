@@ -20,7 +20,7 @@ options.add_argument("--disable-gpu")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 # Função para aguardar o carregamento completo da página
-def wait_for_page_load(driver, timeout=30):
+def wait_for_page_load(driver, timeout=5):
     try:
         WebDriverWait(driver, timeout).until(
             lambda d: d.execute_script("return document.readyState") == "complete"
@@ -31,7 +31,7 @@ def wait_for_page_load(driver, timeout=30):
         return False
 
 # Função para aguardar o elemento ficar presente
-def wait_for_element(driver, by, value, timeout=30):
+def wait_for_element(driver, by, value, timeout=5):
     try:
         return WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((by, value))
